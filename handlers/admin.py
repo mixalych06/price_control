@@ -3,7 +3,7 @@ from aiogram import types, Dispatcher
 from create_bot import ADMIN_ID
 from utils.main import pars
 from keyboards.kb_admin import keyboard_admin_main
-from keyboards.kb_all import gen_markup_sellers, gen_seller_markup_
+from keyboards.kb_all import gen_markup_sellers, gen_seller_markup_, gen__markup_pagination
 from create_bot import db
 
 async def start_admin(message: types.Message):
@@ -47,8 +47,18 @@ async def show_seller(cq: types.CallbackQuery):
 async def pagination_product(cq: types.CallbackQuery):
     '''Обрабатывает инлайн кнопки выбора продавца'''
     inl_com = cq.data.split(':')
+    page = int(inl_com[3])
     products = db.bd_get_tracked_products(inl_com[1], int(inl_com[2]))
-    await cq.message.edit_text(text=products)
+    if len(products):
+        print(products)
+        await cq.message.edit_text(text=f'<b>Seller:</b> {products[page][0]}\n'
+                                        f'<b>Name:</b> {products[page][2]}\n'
+                                        f'<b>ID_prod:</b> {products[page][1]}\n'
+                                        f'<b>Price:</b> {products[page][3]}\n'
+                                        f'<b>min_price:</b> {products[page][4]}',
+                                   reply_markup=await gen__markup_pagination(page, inl_com[1], int(inl_com[2]), len(products)))
+    else:
+        await cq.answer(text='Нет данных', cache_time=1, show_alert=True)
 
 
 

@@ -1,5 +1,6 @@
 import sqlite3
 
+
 class DataBase:
     def __init__(self, bd_file):
         self.connection = sqlite3.connect(bd_file)
@@ -12,37 +13,33 @@ class DataBase:
                                 'min_price INTEGER NOT NULL DEFAULT 0,'
                                 'flag1 INTEGER NOT NULL DEFAULT 0,'
                                 'flag2 INTEGER NOT NULL DEFAULT 0)')
-#
-#         self.connection.execute('CREATE TABLE IF NOT EXISTS users (ID INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,'
-#                                 'user_id UNIQUE,'
-#                                 'user_phone INTEGER DEFAULT 1,'
-#                                 'user_name,'
-#                                 'reg_date,'
-#                                 'last_purchase INTEGER DEFAULT 1,'
-#                                 'last_purchase_date INTEGER DEFAULT 1,'
-#                                 'total_money INTEGER DEFAULT 1,'
-#                                 'user_activity INTEGER DEFAULT 1)')
-#
+
+        self.connection.execute('CREATE TABLE admin_user (id_user INTEGER, '
+                                'name TEXT, telephone TEXT,'
+                                'su_admin INTEGER DEFAULT 0, '
+                                'admin INTEGER DEFAULT 0, '
+                                'user INTEGER DEFAULT 0,'
+                                'flag1 INTEGER DEFAULT 0, '
+                                'flag2 INTEGER DEFAULT 0)')
+
 
         self.connection.commit()
+
     """*********************\/Добавление в базу\/*******************************"""
 
     def bd_adds_products(self, product_data: list):
         """Добавляет продукт в БД при условии, что его там не"""
         with self.connection:
-            x = self.cursor.execute("SELECT * FROM all_product WHERE product_id = ?", (int(product_data[2]),)).fetchone()
+            x = self.cursor.execute("SELECT * FROM all_product WHERE product_id = ?",
+                                    (int(product_data[2]),)).fetchone()
             print(x)
             if not x:
                 self.cursor.execute("INSERT INTO all_product (seller_id, name_seller, product_id, name_product, price) "
-                                "VALUES (?, ?, ?, ?, ?)", (product_data))
+                                    "VALUES (?, ?, ?, ?, ?)", (product_data))
             self.connection.commit()
 
-
-
-
-
-
     """*********************Частичное изменение зписей в БД *******************************"""
+
     def bd_changes_the_current_price(self, id_products, price):
         """Изменяет цену товара в БД, если не совпадает с переданной"""
         with self.connection:
@@ -65,13 +62,12 @@ class DataBase:
             sellers = self.cursor.execute("SELECT DISTINCT seller_id, name_seller FROM all_product").fetchall()
             return sellers
 
-    def bd_get_seller_info(self,seller_id):
+    def bd_get_seller_info(self, seller_id):
         """Запрос информации о магазине"""
         with self.connection:
             seller = self.cursor.execute("SELECT seller_id, name_seller, COUNT(product_id) FROM all_product "
                                          "WHERE seller_id = ?", (seller_id,)).fetchone()
             return seller
-
 
     def bd_get_all_products_seller(self, seller_id):
         """Запрос всех продуктов продавца"""
@@ -85,9 +81,11 @@ class DataBase:
         '''Отдаёт количество отслеживаемых и не отслеживаемых товара продавца'''
         with self.connection:
             track = self.cursor.execute("SELECT COUNT(min_price)"
-                                          "FROM all_product WHERE seller_id = ? AND min_price > 0", (seller_id,)).fetchone()
+                                        "FROM all_product WHERE seller_id = ? AND min_price > 0",
+                                        (seller_id,)).fetchone()
             not_track = self.cursor.execute("SELECT COUNT(min_price)"
-                                          "FROM all_product WHERE seller_id = ? AND min_price = 0", (seller_id,)).fetchone()
+                                            "FROM all_product WHERE seller_id = ? AND min_price = 0",
+                                            (seller_id,)).fetchone()
 
             return *track, *not_track
 
@@ -96,12 +94,14 @@ class DataBase:
         with self.connection:
             if int(tracking_index) == 1:
                 products = self.cursor.execute("SELECT name_seller, product_id, "
-                                             "name_product, price, min_price "
-                                             "FROM all_product WHERE seller_id = ? AND min_price > 0", (seller_id,)).fetchall()
-            elif int(tracking_index) == 0:products = self.cursor.execute("SELECT name_seller, product_id, "
-                                             "name_product, price, min_price "
-                                             "FROM all_product WHERE seller_id = ? AND min_price = 0", (seller_id,)).fetchall()
-
+                                               "name_product, price, min_price "
+                                               "FROM all_product WHERE seller_id = ? AND min_price > 0 "
+                                               "ORDER BY name_product", (seller_id,)).fetchall()
+            elif int(tracking_index) == 0:
+                products = self.cursor.execute("SELECT name_seller, product_id, "
+                                               "name_product, price, min_price "
+                                               "FROM all_product WHERE seller_id = ? AND min_price = 0 "
+                                               "ORDER BY name_product", (seller_id,)).fetchall()
 
             return products
 
