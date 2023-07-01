@@ -1,26 +1,32 @@
 import re
 from aiogram import types, Dispatcher
-from create_bot import ADMIN_ID
-from utils.main import pars
+from create_bot import ADMIN_ID, bot
+from utils.filters import checks_exists_admin
+from utils.parsr import pars
 from keyboards.kb_admin import keyboard_admin_main
 from keyboards.kb_all import gen_markup_sellers, gen_seller_markup_, gen__markup_pagination
 from create_bot import db
 
-async def start_admin(message: types.Message):
+async def start_suadmin(message: types.Message):
     await message.reply('Привет, admin', reply_markup=keyboard_admin_main)
 
 async def message_all(message: types.Message):
-    '''Принимает ссылку или id одного или нескольких магазинов вылеляет, передаёт id парсеру'''
+    '''Принимает ссылку одного, или нескольких магазинов вылеляет, передаёт id парсеру'''
     url = message.text
-    try:
-        id_seller = re.findall(r'\d{5,6}', url)
-        if id_seller:
-            await message.reply(f'Продавец: {id_seller}', reply_markup=keyboard_admin_main)
-            await pars(id_seller, message.chat.id)
-    except IndexError:
-        await message.reply(f'Не верный формат')
-    except AttributeError:
-        await message.reply(f'Не верный формат')
+    print(123, url)
+    if 'wildberries' in url and 'seller' in url:
+        print(123, url)
+        try:
+            id_seller = re.findall(r'\d{5,6}', url)
+            print(id_seller)
+            await message.reply(text=f'Вы рередали ссылки на продавцов: {id_seller}\n'
+                                 f'Дождитесь сообщения о количестве товаров каждого продавца...', reply_markup=keyboard_admin_main)
+            await pars(id_seller, user_id=message.chat.id)
+        except:
+            pass
+    else:
+        await message.reply(f'Не удалось найти id продавца', reply_markup=keyboard_admin_main)
+
 
 async def shows_sellers(message: types.Message):
     '''Обрабатывает кнопку магазины и товары'''
@@ -60,15 +66,38 @@ async def pagination_product(cq: types.CallbackQuery):
     else:
         await cq.answer(text='Нет данных', cache_time=1, show_alert=True)
 
+async def add_user_or_admin(cq: types.CallbackQuery):
+    '''добавляем админа или пользователя'''
+    inl_com = cq.data.split(':')
+    id = cq.message.text.split(':')[1]
+    name = cq.message.text.split(':')[-1]
+    db.bd_adds_user(int(id), name, inl_com[1])
+    await cq.answer(text=f'Пользователь {name}, id {id}\n Добавлен с правами {inl_com[1]}', show_alert=True)
+    text_privilege = {'admin': 'Вы можете:</b>\n✅добавлять/удалять пользователей;\n'
+                               '✅установливать и редактировать цену для отслеживания\n'
+                               '✅добавлять/удалять продавцов\n'
+                               '✅получать уведомления о снижении цены ниже установленной\n'
+                               '✅просматривать отслеживаемые магазины и товары',
+                      'user': 'Вы можете:</b>\n✅просматривать отслеживаемые магазины и товары\n'
+                              '✅получать уведомления о снижении цены ниже установленной\n' }
+    await bot.send_message(id, text=f'<b>Вы добавлены с правами {inl_com[1]}\n{text_privilege[inl_com[1]]}')
+    await cq.message.delete()
+
+async def shows_users(message: types.Message):
+    '''Обрабатывает кнопку Администраторы'''
+    sellers = db.bd_get_all_sellers()
+    sellers = {str(id): seller for id, seller in sellers}
+    await message.delete()
 
 
 
 
 
 def register_handlers_admin(dp: Dispatcher):
-    dp.register_message_handler(shows_sellers, text=['Магазины и товары'])
-    dp.register_message_handler(start_admin, lambda message: str(message.from_user.id) in ADMIN_ID, text=['старт', 'Старт', '/start'])
-    dp.register_message_handler(message_all, lambda message: str(message.from_user.id) in ADMIN_ID)
+    dp.register_message_handler(shows_sellers, checks_exists_admin, text=['Магазины и товары'])
+    dp.register_message_handler(start_suadmin, lambda message: str(message.from_user.id) in ADMIN_ID, text=['старт', 'Старт', '/start'])
+    dp.register_message_handler(message_all, checks_exists_admin)
 
     dp.register_callback_query_handler(show_seller, lambda x: x.data.startswith('moreSeller'))
     dp.register_callback_query_handler(pagination_product, lambda x: x.data.startswith('track'))
+    dp.register_callback_query_handler(add_user_or_admin, lambda x: x.data.startswith('add_user'))

@@ -12,11 +12,10 @@ async def gen_markup_sellers(sellers: dict):
     return markup_sellers
 
 async def gen_seller_markup_(tracked_product, seller_id):
-    """Создаёт инлайн клавиатуру из переданого словаря, ключ-список значений, знчение-для срабатывания хэндлера"""
+    """Создаёт инлайн клавиатуру для срабатывания хэндлера"""
     markup_seller = InlineKeyboardMarkup(row_width=1)
     markup_seller.add(InlineKeyboardButton(text=f'✅ Отслеживается\n({tracked_product[0]})', callback_data=f'track:{seller_id}:1:0'),
-                      InlineKeyboardButton(text=f'❎ Не отслеживается\n({tracked_product[1]})', callback_data=f'track:{seller_id}:0:0'))\
-        .add(InlineKeyboardButton(text=f'Удалить магазин', callback_data=f'delSel:{seller_id}'))
+                      InlineKeyboardButton(text=f'❎ Не отслеживается\n({tracked_product[1]})', callback_data=f'track:{seller_id}:0:0'))
 
     return markup_seller
 
