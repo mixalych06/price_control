@@ -1,6 +1,7 @@
 import sqlite3
 
 
+
 class DataBase:
     def __init__(self, bd_file):
         self.connection = sqlite3.connect(bd_file)
@@ -46,6 +47,11 @@ class DataBase:
                 self.cursor.execute("INSERT INTO admin_user (id_user, name, user) "
                                     "VALUES (?, ?, ?)", (id, name, 1))
             self.connection.commit()
+
+    def bd_add_su_admin(self, id, name,):
+        with self.connection:
+            self.cursor.execute("INSERT INTO admin_user (id_user, name, su_admin) "
+                                    "VALUES (?, ?, ?)", (id, name, 1))
 
 
     """*********************Частичное изменение зписей в БД *******************************"""
@@ -133,22 +139,54 @@ class DataBase:
         return [user[0] for user in users]
 
     def bd_get_su_admins(self):
-        '''Отдаёт список всех суперпользователей'''
+        '''Отдаёт список всех id суперпользователей'''
         with self.connection:
             users = self.cursor.execute("SELECT id_user FROM admin_user WHERE su_admin = 1").fetchall()
         return [user[0] for user in users]
 
+    def bd_get_su_admins_all(self):
+        '''Отдаёт список всех суперпользователей'''
+        with self.connection:
+            users = self.cursor.execute("SELECT * FROM admin_user WHERE su_admin = 1").fetchall()
+        return users
+
     def bd_get_users(self):
-        '''Отдаёт список всех user'''
+        '''Отдаёт список всех id user'''
         with self.connection:
             users = self.cursor.execute("SELECT id_user FROM admin_user WHERE user = 1").fetchall()
         return [user[0] for user in users]
 
+    def bd_get_users_all(self):
+        '''Отдаёт список всех user'''
+        with self.connection:
+            users = self.cursor.execute("SELECT * FROM admin_user WHERE user = 1").fetchall()
+        return users
+
+
+
 
     """*********************Удаление данных из БД*******************************"""
 
-    def bd_delete_product(self, id_products):
+    def bd_delete_shop(self, id_seller):
         """Удаляет продукт из БД по id"""
         with self.connection:
-            self.cursor.execute("DELETE FROM seller_id WHERE product_id = ? ", (id_products,))
+            self.cursor.execute("DELETE FROM all_product WHERE seller_id = ? ", (id_seller,))
+        self.connection.commit()
+
+
+    def bd_delete_user(self, id_user):
+        """Удаляет продукт из БД по id"""
+        with self.connection:
+            self.cursor.execute("DELETE FROM admin_user WHERE id_user = ? ", (id_user,))
             self.connection.commit()
+
+    def bd_delete_admin(self, id_user):
+        """Удаляет продукт из БД по id"""
+        with self.connection:
+            self.cursor.execute("DELETE FROM admin_user WHERE id_user = ? ", (id_user,))
+            self.connection.commit()
+
+
+
+
+

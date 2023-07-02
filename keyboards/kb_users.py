@@ -1,6 +1,4 @@
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
-
-
 keyboard_user_main: ReplyKeyboardMarkup = ReplyKeyboardMarkup(resize_keyboard=True)
 but_shop_user: KeyboardButton = KeyboardButton('Продавцы и товары')
 but_help_user: KeyboardButton = KeyboardButton('Помощь')
@@ -34,15 +32,8 @@ async def gen__markup_pagination_for_user(page_number, seller_id, trecked, produ
 
     return markup_pagination
 
-async def gen_markup_sellers_user(sellers: dict):
-    """Создаёт инлайн клавиатуру из переданого словаря, ключ-список значений, знчение-для срабатывания хэндлера"""
-    markup_sellers = InlineKeyboardMarkup(row_width=1)
-    x = []
-    for key, value in sellers.items():
-        x.append(InlineKeyboardButton(text=str(value), callback_data=f'u_moreSeller:{key}'))
-    markup_sellers.add(*x)
 
-    return markup_sellers
+
 async def gen_seller_markup_user(tracked_product, seller_id):
     """Создаёт инлайн клавиатуру для срабатывания хэндлера для юзера"""
     markup_seller = InlineKeyboardMarkup(row_width=1)
