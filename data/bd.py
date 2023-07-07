@@ -75,6 +75,13 @@ class DataBase:
             print('or')
 
     """*********************Выборка данных из БД*******************************"""
+    def bd_all_product(self):
+        with self.connection.cursor() as cursor:
+            cursor.execute("SELECT name_seller, seller_id,"
+                           " name_product, product_id, price, min_price "
+                           "FROM all_product")
+            sellers = cursor.fetchall()
+            return sellers
 
     def bd_get_all_sellers(self):
         """Запрос уникальных id магазинов существующих в базе"""
@@ -82,6 +89,7 @@ class DataBase:
             cursor.execute("SELECT DISTINCT seller_id, name_seller FROM all_product")
             sellers = cursor.fetchall()
             return sellers
+
 
     def bd_get_seller_info(self, seller_id):
         """Запрос информации о магазине"""

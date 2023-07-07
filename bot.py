@@ -14,6 +14,6 @@ register_handlers_other(dp)
 
 if __name__ == "__main__":
     loop = asyncio.get_event_loop()
-    loop.create_task(parsing_price(20))
-    loop.create_task(parsing_price2(30))
+    loop.create_task(parsing_price(10))
+    loop.create_task(parsing_price2(15))
     executor.start_polling(dp, skip_updates=True)

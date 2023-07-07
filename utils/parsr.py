@@ -13,9 +13,9 @@ async def pars(id_sellers: list, user_id='', parsing = True):
     headers = {'User-Agent': UserAgent().chrome}
     for seller in id_sellers:
         db.bd_delete_shop(seller)
+        b = requests.get(url=f'https://www.wildberries.ru/webapi/seller/data/short/{seller}',
+                         headers=headers).json()
         if parsing:
-            b = requests.get(url=f'https://www.wildberries.ru/webapi/seller/data/short/{seller}',
-                             headers=headers).json()
             await bot.send_message(chat_id=user_id, text=f' <b>Продавец:</b> {b["name"]}, id: {b["id"]}')
         lengh = 0
         for j in range(60):
@@ -28,28 +28,34 @@ async def pars(id_sellers: list, user_id='', parsing = True):
             else:
                 if parsing:
                     await bot.send_message(chat_id=user_id, text=(f'<b>Всего товаров:</b> {lengh}'))
-                    break
+                break
     if not parsing:
         await bot.send_message(chat_id=user_id, text=(f'<b>База данных обновлена</b>'))
 
 
 def thread_2():
+    """Парсит цены.Работает отдельным потоком"""
     headers = {'User-Agent': UserAgent().chrome}
+    print(headers)
     print('start', datetime.now())
     sellers = db.bd_get_all_sellers()
     id_sellers = [id[0] for id in sellers]
     if id_sellers:
         for seller in id_sellers:
             for j in range(30):
-                a = requests.get(
-                    url=f'https://catalog.wb.ru/sellers/catalog?appType=1&curr=rub&dest=-1257786&page={j + 1}'
-                        f'&sort=popular&spp=0&supplier={seller}', headers=headers)
-                if len(a.json()['data']['products']) > 0:
-                    for product in a.json()['data']['products']:
-                        #  записываем в базу текущую цену
-                        db.bd_changes_current_price(product["id"], product["salePriceU"] / 100)
+                try:
+                    a = requests.get(
+                        url=f'https://catalog.wb.ru/sellers/catalog?appType=1&curr=rub&dest=-1257786&page={j + 1}'
+                            f'&sort=popular&spp=0&supplier={seller}', headers=headers)
+                    if len(a.json()['data']['products']) > 0:
+                        for product in a.json()['data']['products']:
+                            #  записываем в базу текущую цену
+                            db.bd_changes_current_price(product["id"], product["salePriceU"] / 100)
+                except:
+                    pass
 
 async def parsing_price(wait_for):
+    """Запускает новый поток для парсинга"""
     while True:
         await asyncio.sleep(wait_for)
         parsing = threading.Thread(target=thread_2)

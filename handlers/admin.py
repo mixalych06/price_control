@@ -1,4 +1,5 @@
 import re
+import pandas as pd
 from aiogram import types, Dispatcher
 from aiogram.dispatcher import FSMContext
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
@@ -22,7 +23,7 @@ async def message_all(message: types.Message):
     url = message.text
     if 'wildberries' in url and 'seller' in url:
         try:
-            id_seller = re.findall(r'\d{5,6}', url)
+            id_seller = re.findall(r'\d{5,8}', url)
             await message.answer(text=f'<b>Начало парсинга магазинов.</b>\n ID: {str(id_seller)}\n'
                                       f'<i>Дождитесь сообщения о количестве товаров каждого продавца...</i>',
                                  reply_markup=keyboard_admin_main)
@@ -169,50 +170,31 @@ async def creates_team(message: types.Message):
     await message.answer(team)
     await message.delete()
 
+async def restart_shop(message: types.Message):
+    sellers = db.bd_get_all_sellers()
+    id_sellers = [id[0] for id in sellers]
+    print(id_sellers)
+    await pars(id_sellers, user_id=message.chat.id, parsing=False)
 
-async def disable_tracking(cq: types.CallbackQuery):
-    '''Прекращает отслеживать мин цену'''
-    try:
-        inl_com = cq.data.split(':')
-        db.bd_changes_min_price(int(inl_com[4]), 0)
-        product = db.bd_get_amount_tracked_products(inl_com[1])
-        if product[0] == 0:
-            await cq.message.delete()
-        else:
-            await pagination_product(cq)
-    except:
-        await cq.answer('Ошибка чтения из базы', show_alert=True)
+async def get_database(message: types.Message):
+    all = db.bd_all_product()
+    print(all)
+    df = pd.DataFrame()
 
+    # Creating two columns
+    df['Продавец'] = [seller[0] for seller in all]
+    df['ID продавца'] = [seller[1] for seller in all]
+    df['Наименование товара'] = [seller[2] for seller in all]
+    df['ID товара'] = [seller[3] for seller in all]
+    df['Стартовая цена'] = [seller[4] for seller in all]
+    df['Текущая цена'] = [seller[5] for seller in all]
 
-async def enable_tracking(cq: types.CallbackQuery, state: FSMContext):
-    '''Прекращает отслеживать мин цену'''
-    await cq.message.edit_text(f'<b>Введите min цену товара.</b>\n{cq.message.text}',
-                               reply_markup=InlineKeyboardMarkup().add(
-                                   InlineKeyboardButton(text='Отмена', callback_data='cancelFSM')))
-    async with state.proxy() as data:
-        data['cq'] = cq
-    await BotFSM.min_price.set()
-
-
-async def add_min_prise(message: types.Message, state: FSMContext):
-    async with state.proxy() as data:
-        data['min_price'] = message.text
-        inl_com = data['cq']
-        inl_com = inl_com.data.split(':')
-        try:
-            db.bd_changes_min_price(int(inl_com[4]), int(data['min_price']))
-        except:
-            await message.answer(text=f'min цена=Ошибка ввода. Попробуйте ещё раз или нажмите отмена"]')
-        await message.answer(text=f'min цена={data["min_price"]} руб. установлена')
-        await message.delete()
-        await pagination_product(data['cq'])
-        await state.finish()
+    df.to_excel('result.xlsx', index=False)
+    doc = open('result.xlsx', 'rb')
+    await message.reply_document(doc)
 
 
-async def cancelFSM(cq: types.CallbackQuery, state: FSMContext):
-    await state.reset_state()
-    await cq.answer(text='Отменено', show_alert=True)
-    await cq.message.delete()
+
 
 
 def register_handlers_admin(dp: Dispatcher):
@@ -221,9 +203,10 @@ def register_handlers_admin(dp: Dispatcher):
     dp.register_message_handler(shows_users, checks_exists_admin, text=['Пользователи'])
     dp.register_message_handler(creates_team, checks_exists_admin, text=['Добавить пользователя'])
     dp.register_message_handler(del_shop_menu, checks_exists_admin, text=['Удалить магазин'])
+    dp.register_message_handler(restart_shop, checks_exists_admin, text=['Обновить базу'])
+    dp.register_message_handler(get_database, checks_exists_admin, text=['Скачать базу'])
     dp.register_message_handler(start_suadmin, lambda message: str(message.from_user.id) in ADMIN_ID,
                                 text=['старт', 'Старт', '/start'])
-    dp.register_message_handler(add_min_prise, content_types=['text'], state=BotFSM.min_price)
     dp.register_message_handler(message_all, checks_exists_admin)
     dp.register_callback_query_handler(pagination_product, lambda x: x.data.startswith('track'))
     dp.register_callback_query_handler(add_user_or_admin, lambda x: x.data.startswith('add_user'))
@@ -231,6 +214,6 @@ def register_handlers_admin(dp: Dispatcher):
     dp.register_callback_query_handler(del_admin, lambda x: x.data.startswith('del_admin'))
     dp.register_callback_query_handler(changes_access, lambda x: x.data.startswith('change'))
     dp.register_callback_query_handler(del_shop, lambda x: x.data.startswith('delshop'))
-    dp.register_callback_query_handler(disable_tracking, lambda x: x.data.startswith('noTr'))
-    dp.register_callback_query_handler(enable_tracking, lambda x: x.data.startswith('startTr'), state=None)
-    dp.register_callback_query_handler(cancelFSM, lambda x: x.data.startswith('cancelFSM'), state='*')
+
+
+
