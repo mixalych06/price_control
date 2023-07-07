@@ -14,7 +14,7 @@ async def start_all(message: types.Message):
 
 
 async def requests_to_add_user(message: types.Message):
-    '''запрос на регистрацию.'''
+    """запрос на регистрацию."""
     su_admin = message.text.split(':')[1]
     await bot.send_message(chat_id=su_admin, text=f'<b>Запрос на добавление нового пользователя.</b>\n'
                                                   f'<b>ID:</b>{message.from_user.id}:\n'
