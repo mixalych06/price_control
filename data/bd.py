@@ -72,7 +72,7 @@ class DataBase:
         """***Уравнивает min цену товара и текущую цену в БД"""
         with self.connection.cursor() as cursor:
             cursor.execute("UPDATE all_product SET min_price = current_price WHERE min_price <> current_price")
-            print('or')
+
 
     """*********************Выборка данных из БД*******************************"""
     def bd_all_product(self):
