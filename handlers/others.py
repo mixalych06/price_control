@@ -5,14 +5,6 @@ from create_bot import db
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 
-async def start_all(message: types.Message):
-    '''срабатывает на любое сообщение от пользователей не в базе'''
-    await message.delete()
-    await message.answer(
-        f'<b>Привет, {message.from_user.first_name}</b>\nБот работает только с зарегистрированными пользователями.\n'
-        'Для начала работы пришлите команду предоставленную администратором!')
-
-
 async def requests_to_add_user(message: types.Message):
     """запрос на регистрацию."""
     su_admin = message.text.split(':')[1]
@@ -22,6 +14,14 @@ async def requests_to_add_user(message: types.Message):
                            reply_markup=InlineKeyboardMarkup().add(
                                InlineKeyboardButton(text=f'Администратор', callback_data='add_user:admin'),
                                InlineKeyboardButton(text=f'Пользователь', callback_data='add_user:user')))
+
+
+async def start_all(message: types.Message):
+    '''срабатывает на любое сообщение от пользователей не в базе'''
+    await message.delete()
+    await message.answer(
+        f'<b>Привет, {message.from_user.first_name}</b>\nБот работает только с зарегистрированными пользователями.\n'
+        'Для начала работы пришлите команду предоставленную администратором!')
 
 
 def register_handlers_other(dp: Dispatcher):

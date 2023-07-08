@@ -63,7 +63,7 @@ class DataBase:
                            (min_price, id_products))
 
     def bd_changes_current_price(self, id_products, current_price):
-        """***Изменяет min цену товара в БД"""
+        """***Изменяет текущую цену товара в БД"""
         with self.connection.cursor() as cursor:
             cursor.execute("UPDATE all_product SET current_price = %s WHERE product_id = %s",
                            (current_price, id_products))
@@ -76,6 +76,7 @@ class DataBase:
 
     """*********************Выборка данных из БД*******************************"""
     def bd_all_product(self):
+        """Отдаёт данные по всем продуктам в БД для формирования выгрузки"""
         with self.connection.cursor() as cursor:
             cursor.execute("SELECT name_seller, seller_id,"
                            " name_product, product_id, price, min_price "
@@ -148,7 +149,7 @@ class DataBase:
         with self.connection.cursor() as cursor:
             cursor.execute("SELECT id_user FROM admin_user")
             users = cursor.fetchall()
-            return [user[0] for user in users]
+            return [str(user[0]) for user in users]
 
     def bd_get_su_admins(self):
         """Отдаёт список всех id суперпользователей"""

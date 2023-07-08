@@ -11,6 +11,7 @@ async def gen_markup_sellers(sellers: dict, inline):
 
     return markup_sellers
 
+
 async def gen_markup_del_sellers(sellers: dict, inline, id_message):
     """Создаёт инлайн клавиатуру из переданого словаря, ключ-список значений, для показа магазинов"""
     markup_sellers = InlineKeyboardMarkup(row_width=1)
@@ -30,15 +31,15 @@ async def gen__markup_pagination(seller_id, products_len, page_number=0):
     if products_len == 1:
         markup_pagination.add(
             InlineKeyboardButton(text=f'⬅️⬅️⬅️', callback_data='null'),
-            InlineKeyboardButton(text=f'{page_number+1}/{products_len}', callback_data=f'null'),
+            InlineKeyboardButton(text=f'{page_number + 1}/{products_len}', callback_data=f'null'),
             InlineKeyboardButton(text=f'➡️➡️➡️', callback_data=f'null'))
         return markup_pagination
 
     elif 0 < page_number < products_len - 1:
         markup_pagination.add(
-            InlineKeyboardButton(text=f'⬅️⬅️⬅️', callback_data=f'track:{seller_id}:{page_number-1}'),
+            InlineKeyboardButton(text=f'⬅️⬅️⬅️', callback_data=f'track:{seller_id}:{page_number - 1}'),
             InlineKeyboardButton(text=f'{page_number + 1}/{products_len}', callback_data=f'null'),
-            InlineKeyboardButton(text=f'➡️➡️➡️', callback_data=f'track:{seller_id}:{page_number+1}'))
+            InlineKeyboardButton(text=f'➡️➡️➡️', callback_data=f'track:{seller_id}:{page_number + 1}'))
         return markup_pagination
     elif page_number == 0:
         markup_pagination.add(

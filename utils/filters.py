@@ -3,9 +3,9 @@ from aiogram import types
 
 
 async def checks_exists_no_user(message: types.Message):
-    """Пользователя нет в базу - True"""
+    """Пользователя нет в базe - True"""
     users = db.bd_get_all_users()
-    return message.from_user.id not in users
+    return str(message.from_user.id) not in users
 
 
 async def checks_exists_admin(message: types.Message):
@@ -21,6 +21,6 @@ async def checks_exists_user(message: types.Message):
 
 
 async def checks_exists_all_users(message: types.Message):
-    """Пользователя нет в базу - True"""
+    """Пользователь  в базе - True"""
     users = db.bd_get_all_users()
-    return message.from_user.id in users
+    return str(message.from_user.id) in users

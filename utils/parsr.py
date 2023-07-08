@@ -18,7 +18,7 @@ async def pars(id_sellers: list, user_id='', parsing = True):
         if parsing:
             await bot.send_message(chat_id=user_id, text=f' <b>Продавец:</b> {b["name"]}, id: {b["id"]}')
         lengh = 0
-        for j in range(60):
+        for j in range(30):
             a = requests.get(url=f'https://catalog.wb.ru/sellers/catalog?appType=1&curr=rub&dest=-1257786&page={j+1}'
                                  f'&sort=popular&spp=0&supplier={seller}', headers=headers)
             if len(a.json()['data']['products']) > 0:
@@ -36,8 +36,6 @@ async def pars(id_sellers: list, user_id='', parsing = True):
 def thread_2():
     """Парсит цены.Работает отдельным потоком"""
     headers = {'User-Agent': UserAgent().chrome}
-    print(headers)
-    print('start', datetime.now())
     sellers = db.bd_get_all_sellers()
     id_sellers = [id[0] for id in sellers]
     if id_sellers:
@@ -51,6 +49,8 @@ def thread_2():
                         for product in a.json()['data']['products']:
                             #  записываем в базу текущую цену
                             db.bd_changes_current_price(product["id"], product["salePriceU"] / 100)
+                    else:
+                        break
                 except:
                     pass
 
@@ -65,20 +65,21 @@ async def parsing_price(wait_for):
 async def parsing_price2(wait_for):
     while True:
         await asyncio.sleep(wait_for)
-        print('смотрим цены', datetime.now())
         products_for_message = db.bd_get_products_for_parsing() #все товары с низкой ценой
-        print(products_for_message)
         if products_for_message:
             all_users = db.bd_get_all_users() #все пользователи
             for product in products_for_message:
                 for user in all_users:
                     # сообщает пользователям о всех товарах со сниженной ценой. Уравнивыет значение текущей и предыдущей цены
-                    await bot.send_message(chat_id=user, text=(f'‼️‼️<b>Внимание</b>‼️‼️\n'
-                                                               f'{product[2]}\n'
-                                                               f'<b><i>"{product[4]}"</i></b>\n'
-                                                               f'ID:{product[3]}\n'
-                                                               f'Стартовая цена: {product[5]} руб.\n'
-                                                               f'Текущая цена: {product[7]} руб.\n'
-                                                               f'Меньше стартовой на '
-                                                               f'{(((product[5] - product[7])/product[5]) * 100)//1} %.'))
+                    try:
+                        await bot.send_message(chat_id=user, text=(f'‼️‼️<b>Внимание</b>‼️‼️\n'
+                                                                   f'{product[2]}\n'
+                                                                   f'<b><i>"{product[4]}"</i></b>\n'
+                                                                   f'ID:{product[3]}\n'
+                                                                   f'Стартовая цена: {product[5]} руб.\n'
+                                                                   f'Текущая цена: {product[7]} руб.\n'
+                                                                   f'Меньше стартовой на '
+                                                                   f'{(((product[5] - product[7])/product[5]) * 100)//1} %.'))
+                    except:
+                        pass
         db.bd_changes_current_price_all()

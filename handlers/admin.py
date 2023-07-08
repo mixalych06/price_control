@@ -7,8 +7,9 @@ from create_bot import ADMIN_ID, bot
 from utils.filters import checks_exists_admin, checks_exists_all_users
 from utils.parsr import pars
 from keyboards.kb_admin import keyboard_admin_main
+from keyboards.kb_users import keyboard_user_main
 from keyboards.kb_all import gen_markup_sellers, gen__markup_pagination, gen_markup_del_sellers
-from create_bot import db, BotFSM
+from create_bot import db
 
 
 async def start_suadmin(message: types.Message):
@@ -64,7 +65,6 @@ async def pagination_product(cq: types.CallbackQuery):
                                                 f'<b>Текущая цена:</b> {products[page][4]} руб.',
                                            reply_markup=await gen__markup_pagination(inl_com[1], len(products), page))
         except:
-            print(99999)
             await bot.answer_callback_query(cq.id)
 
     else:
@@ -85,7 +85,9 @@ async def add_user_or_admin(cq: types.CallbackQuery):
                                '✅просматривать отслеживаемые магазины и товары',
                       'user': 'Ты можешь:</b>\n✅просматривать отслеживаемые магазины и товары\n'
                               '✅получать уведомления о снижении цены ниже установленной\n'}
-    await bot.send_message(id, text=f'<b>Вы добавлены с правами {inl_com[1]}\n{text_privilege[inl_com[1]]}')
+    keyboards_list = {'admin': keyboard_admin_main, 'user': keyboard_user_main}
+    await bot.send_message(id, text=f'<b>Вы добавлены с правами {inl_com[1]}\n{text_privilege[inl_com[1]]}',
+                           reply_markup=keyboards_list[inl_com[1]])
     await cq.message.delete()
 
 
@@ -130,8 +132,10 @@ async def del_admin(cq: types.CallbackQuery):
 async def changes_access(cq: types.CallbackQuery):
     '''изменение прав доступа'''
     inl_com = cq.data.split(':')
-    inl_com = list(map(int, inl_com[1:]))
+    inl_com = list(map(int, inl_com[1:])) # переводит значения callback  в int для БД
     db.changes_access(inl_com)
+    await cq.answer('Права изменены',  show_alert=True)
+    await cq.message.delete()
 
 
 async def del_shop_menu(message: types.Message):
@@ -173,15 +177,16 @@ async def creates_team(message: types.Message):
 async def restart_shop(message: types.Message):
     sellers = db.bd_get_all_sellers()
     id_sellers = [id[0] for id in sellers]
-    print(id_sellers)
-    await pars(id_sellers, user_id=message.chat.id, parsing=False)
+    if id_sellers:
+        await pars(id_sellers, user_id=message.chat.id, parsing=False)
+    else:
+        await message.answer('Нет магазинов в базе')
 
 async def get_database(message: types.Message):
+    """Выгружает из базы все товары и перезаписывает excel файл и присылает запросившему"""
     all = db.bd_all_product()
-    print(all)
     df = pd.DataFrame()
-
-    # Creating two columns
+    # Создаём 6 колонок и помещаем в них данные из БД
     df['Продавец'] = [seller[0] for seller in all]
     df['ID продавца'] = [seller[1] for seller in all]
     df['Наименование товара'] = [seller[2] for seller in all]
@@ -194,9 +199,6 @@ async def get_database(message: types.Message):
     await message.reply_document(doc)
 
 
-
-
-
 def register_handlers_admin(dp: Dispatcher):
     dp.register_message_handler(shows_sellers, checks_exists_all_users, text=['Магазины и товары'])
     dp.register_message_handler(shows_users, checks_exists_admin, text=['Администраторы'])
@@ -204,7 +206,7 @@ def register_handlers_admin(dp: Dispatcher):
     dp.register_message_handler(creates_team, checks_exists_admin, text=['Добавить пользователя'])
     dp.register_message_handler(del_shop_menu, checks_exists_admin, text=['Удалить магазин'])
     dp.register_message_handler(restart_shop, checks_exists_admin, text=['Обновить базу'])
-    dp.register_message_handler(get_database, checks_exists_admin, text=['Скачать базу'])
+    dp.register_message_handler(get_database, checks_exists_all_users, text=['Скачать базу'])
     dp.register_message_handler(start_suadmin, lambda message: str(message.from_user.id) in ADMIN_ID,
                                 text=['старт', 'Старт', '/start'])
     dp.register_message_handler(message_all, checks_exists_admin)

@@ -1,8 +1,11 @@
+from keyboards.kb_admin import but_get_database
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
+
 keyboard_user_main: ReplyKeyboardMarkup = ReplyKeyboardMarkup(resize_keyboard=True)
 but_shop_user: KeyboardButton = KeyboardButton('Магазины и товары')
 but_help_user: KeyboardButton = KeyboardButton('Помощь')
-keyboard_user_main.add(but_shop_user).add(but_help_user)
+keyboard_user_main.add(but_shop_user).add(but_get_database).add(but_help_user)
+
 
 async def gen__markup_pagination_for_user(page_number, seller_id, trecked, products_len):
     """Создаёт инлайн клавиатуру пагинации товаров
@@ -11,14 +14,14 @@ async def gen__markup_pagination_for_user(page_number, seller_id, trecked, produ
     if products_len == 1:
         markup_pagination.add(
             InlineKeyboardButton(text=f'⬅️⬅️⬅️', callback_data='null'),
-            InlineKeyboardButton(text=f'{page_number+1}/{products_len}', callback_data=f'null'),
+            InlineKeyboardButton(text=f'{page_number + 1}/{products_len}', callback_data=f'null'),
             InlineKeyboardButton(text=f'➡️➡️➡️', callback_data=f'null'))
 
     elif 0 < page_number < products_len - 1:
         markup_pagination.add(
-            InlineKeyboardButton(text=f'⬅️⬅️⬅️', callback_data=f'u_track:{seller_id}:{trecked}:{page_number-1}'),
+            InlineKeyboardButton(text=f'⬅️⬅️⬅️', callback_data=f'u_track:{seller_id}:{trecked}:{page_number - 1}'),
             InlineKeyboardButton(text=f'{page_number + 1}/{products_len}', callback_data=f'null'),
-            InlineKeyboardButton(text=f'➡️➡️➡️', callback_data=f'u_track:{seller_id}:{trecked}:{page_number+1}'))
+            InlineKeyboardButton(text=f'➡️➡️➡️', callback_data=f'u_track:{seller_id}:{trecked}:{page_number + 1}'))
     elif page_number == 0:
         markup_pagination.add(
             InlineKeyboardButton(text=f'⬅️⬅️⬅️', callback_data=f'u_track:{seller_id}:{trecked}:{products_len - 1}'),
@@ -31,6 +34,3 @@ async def gen__markup_pagination_for_user(page_number, seller_id, trecked, produ
             InlineKeyboardButton(text=f'➡️➡️➡️', callback_data=f'u_track:{seller_id}:{trecked}:{0}'))
 
     return markup_pagination
-
-
-
