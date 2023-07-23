@@ -138,7 +138,7 @@ class DataBase:
     def bd_get_products_for_parsing(self):
         """***Отдаёт товары со сниженой ценой"""
         with self.connection.cursor() as cursor:
-            cursor.execute("SELECT * FROM all_product WHERE current_price < price - price * 0.15 "
+            cursor.execute("SELECT * FROM all_product WHERE current_price < price - price * 0.4 "
                            "AND min_price <> current_price "
                            "ORDER BY name_seller")
             products = cursor.fetchall()
